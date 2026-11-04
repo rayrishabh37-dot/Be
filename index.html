@@ -1,266 +1,75 @@
+name: Build be Android APK
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#e9f0e6">
-<title>be. — A little peace, every day</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500&display=swap');
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
-:root {
-  --bg:#edf2e9;
-  --card:#f9fbf6;
-  --green:#526d55;
-  --dark:#344b37;
-  --muted:#849485;
-  --line:#dce6d9;
-  --soft:#dfeadd;
-}
-* {box-sizing:border-box}
-body {
-  margin:0;background:var(--bg);color:var(--dark);
-  font-family:'DM Sans',sans-serif;min-height:100vh;
-}
-button,input,textarea {font:inherit}
-button {cursor:pointer}
-#app {max-width:480px;min-height:100vh;margin:auto;padding:25px 22px 100px}
-.top {display:flex;justify-content:space-between;align-items:center;margin:5px 0 45px}
-.logo {font-family:'Playfair Display',serif;font-size:34px;letter-spacing:-2px}
-.small {font-size:12px;color:var(--muted)}
-.screen {animation:appear .45s ease both}
-@keyframes appear {
-  from {opacity:0;transform:translateY(10px)}
-  to {opacity:1;transform:translateY(0)}
-}
-h1 {font-family:'Playfair Display',serif;font-weight:400;font-size:34px;line-height:1.25;margin:0 0 12px}
-h2 {font-family:'Playfair Display',serif;font-weight:400;font-size:27px}
-p {line-height:1.6}
-.muted {color:var(--muted)}
-.option {
-  display:block;width:100%;text-align:left;padding:17px 19px;
-  margin:11px 0;border:1px solid var(--line);border-radius:17px;
-  background:var(--card);color:var(--dark);transition:.2s;
-}
-.option:active,.option.selected {background:var(--soft);border-color:#91aa91}
-.primary {
-  border:0;border-radius:30px;background:var(--green);color:white;
-  padding:16px 24px;width:100%;margin-top:20px;font-weight:600;
-}
-.secondary {
-  border:1px solid var(--line);border-radius:25px;padding:12px 18px;
-  background:transparent;color:var(--green);
-}
-.progress {height:3px;background:var(--line);border-radius:5px;margin:0 0 40px}
-.progress span {display:block;height:100%;background:var(--green);border-radius:5px;transition:.3s}
-.card {
-  background:var(--card);border:1px solid rgba(255,255,255,.8);
-  border-radius:25px;padding:24px;margin:20px 0;
-  box-shadow:0 8px 30px rgba(66,91,66,.045);
-}
-.affirmation {
-  font-family:'Playfair Display',serif;font-size:29px;
-  line-height:1.4;margin:17px 0 25px;
-}
-.actions {display:flex;gap:10px;flex-wrap:wrap}
-.actions button {flex:1}
-.nav {
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:min(480px,100%);display:flex;justify-content:space-around;
-  padding:14px 8px calc(14px + env(safe-area-inset-bottom));
-  background:rgba(249,251,246,.94);backdrop-filter:blur(15px);
-  border-top:1px solid var(--line);
-}
-.nav button {border:0;background:none;color:var(--muted);font-size:11px}
-.nav button.active {color:var(--green);font-weight:700}
-.nav span {display:block;font-size:20px;margin-bottom:4px}
-textarea,input {
-  width:100%;padding:15px;border:1px solid var(--line);
-  border-radius:15px;background:var(--card);color:var(--dark);
-  outline:none;margin:10px 0;
-}
-.quote {padding:17px 0;border-bottom:1px solid var(--line)}
-.theme-dot {width:30px;height:30px;border-radius:50%;display:inline-block;margin:7px;border:2px solid white}
-.hidden {display:none!important}
-</style>
-</head>
-<body>
-<div id="app">
-  <div class="top">
-    <div class="logo">be.</div>
-    <div class="small" id="topLabel">A LITTLE PEACE, EVERY DAY</div>
-  </div>
-  <main id="screen"></main>
-</div>
-<nav class="nav hidden" id="nav">
-  <button class="active" data-page="home"><span>⌂</span>Home</button>
-  <button data-page="saved"><span>♡</span>Saved</button>
-  <button data-page="journal"><span>✎</span>Journal</button>
-  <button data-page="profile"><span>○</span>You</button>
-</nav>
+permissions:
+  contents: read
 
-<script>
-const $ = id => document.getElementById(id);
-const affirmations = [
- "I am growing at my own pace.",
- "I am allowed to take things slowly.",
- "I deserve the same kindness I give to others.",
- "I trust the journey I am on.",
- "I am enough, just as I am.",
- "Today, I choose peace over pressure.",
- "Small steps are still progress.",
- "I give myself room to grow.",
- "I can begin again, whenever I need.",
- "I am becoming someone I am proud of."
-];
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-let answers = JSON.parse(localStorage.getItem('beAnswers') || '{}');
-let saved = JSON.parse(localStorage.getItem('beSaved') || '[]');
-let journal = JSON.parse(localStorage.getItem('beJournal') || '[]');
-let question = 0;
-let selected = '';
-let currentPage = 'home';
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-const questions = [
- {title:"What should we call you?",type:"input",key:"name"},
- {title:"What brings you here?",options:["More confidence","Self-love","Peace of mind","Personal growth","Daily motivation"],key:"purpose"},
- {title:"How would you like to feel?",options:["Calm","Happy","Confident","Grateful","Balanced"],key:"feeling"},
- {title:"What would you like to focus on?",options:["Myself","My goals","My relationships","My happiness","A little of everything"],key:"focus"},
- {title:"When should we remind you?",options:["Morning","Afternoon","Evening","No reminders"],key:"reminder"}
-];
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-function showOnboarding(){
- $('nav').classList.add('hidden');
- $('topLabel').textContent='A LITTLE PEACE, EVERY DAY';
- const q=questions[question];
- $('screen').innerHTML=`
- <section class="screen">
- <div class="progress"><span style="width:${(question+1)/questions.length*100}%"></span></div>
- <div class="small">A FEW LITTLE QUESTIONS · ${question+1} OF ${questions.length}</div>
- <h1 style="margin-top:18px">${q.title}</h1>
- ${q.type==='input'
- ? `<input id="answerInput" placeholder="Your name" value="${answers.name||''}">`
- : q.options.map(o=>`<button class="option ${answers[q.key]===o?'selected':''}" onclick="choose('${o.replace(/'/g,"\\'")}')">${o}</button>`).join('')}
- <button class="primary" onclick="nextQuestion()">Continue</button>
- <button class="secondary" style="width:100%;margin-top:12px;border:0" onclick="skipQuestion()">Skip</button>
- </section>`;
-}
-function choose(value){
- selected=value;
- document.querySelectorAll('.option').forEach(b=>{
- b.classList.toggle('selected',b.textContent===value);
- });
-}
-function nextQuestion(){
- const q=questions[question];
- if(q.type==='input'){
- const value=$('answerInput').value.trim();
- if(value) answers.name=value;
- } else if(selected) answers[q.key]=selected;
- localStorage.setItem('beAnswers',JSON.stringify(answers));
- if(question<questions.length-1){question++;selected='';showOnboarding();}
- else finishOnboarding();
-}
-function skipQuestion(){
- question<questions.length-1?(question++,showOnboarding()):finishOnboarding();
-}
-function finishOnboarding(){
- localStorage.setItem('beStarted','yes');
- showHome();
-}
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-function showHome(){
- currentPage='home';
- $('nav').classList.remove('hidden');
- setActive();
- const name=answers.name?`, ${answers.name}`:'';
- const today=new Date();
- const index=(today.getFullYear()*366+today.getMonth()*31+today.getDate())%affirmations.length;
- const quote=affirmations[index];
- $('screen').innerHTML=`
- <section class="screen">
- <div class="small">${today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase()}</div>
- <h1 style="margin-top:12px">Take a breath${name}.</h1>
- <p class="muted">A little moment, just for you.</p>
- <div class="card">
- <div class="small">TODAY'S AFFIRMATION</div>
- <div class="affirmation">${quote}</div>
- <div class="actions">
- <button class="secondary" onclick="toggleSave('${quote.replace(/'/g,"\\'")}')">♡ ${saved.includes(quote)?'Saved':'Save'}</button>
- <button class="secondary" onclick="shareQuote('${quote.replace(/'/g,"\\'")}')">↗ Share</button>
- </div></div>
- <div class="card">
- <div class="small">A GENTLE REMINDER</div>
- <p style="font-family:'Playfair Display';font-size:21px">You don't have to figure everything out today.</p>
- </div>
- <button class="primary" onclick="showPage('journal')">How are you feeling today?</button>
- </section>`;
-}
-function toggleSave(q){
- saved=saved.includes(q)?saved.filter(x=>x!==q):[...saved,q];
- localStorage.setItem('beSaved',JSON.stringify(saved));
- showPage(currentPage);
-}
-async function shareQuote(q){
- if(navigator.share){try{await navigator.share({text:q+' — be.'})}catch(e){}}
- else {try{await navigator.clipboard.writeText(q+' — be.');alert('Quote copied!')}catch(e){alert(q+' — be.')}}
-}
-function setActive(){
- document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
-}
-function showPage(page){
- currentPage=page;setActive();
- if(page==='home'){showHome();return}
- if(page==='saved'){
- $('screen').innerHTML=`<section class="screen"><h1>Your saved thoughts.</h1><p class="muted">Little words to come back to.</p>
- ${saved.length?saved.map(q=>`<div class="quote">${q}<button class="secondary" style="float:right" onclick="toggleSave('${q.replace(/'/g,"\\'")}')">Remove</button></div>`).join(''):'<p class="muted">Your favourite affirmations will appear here.</p>'}</section>`;
- }
- if(page==='journal'){
- $('screen').innerHTML=`<section class="screen"><h1>A moment with yourself.</h1><p class="muted">How are you feeling today?</p>
- <div class="card"><div class="actions" id="moods">
- ${['😊','😌','🌿','😔','✨'].map(m=>`<button class="secondary" onclick="pickMood('${m}')">${m}</button>`).join('')}
- </div>
- <textarea id="journalText" rows="5" placeholder="Write whatever is on your mind..."></textarea>
- <button class="primary" onclick="saveJournal()">Save entry</button></div>
- <h2>Your little moments</h2>
- ${journal.map(j=>`<div class="quote"><span>${j.mood||'🌿'} · ${j.date}</span><p>${escapeHTML(j.text)}</p></div>`).join('')}
- </section>`;
- }
- if(page==='profile'){
- $('screen').innerHTML=`<section class="screen"><h1>Your space.</h1><p class="muted">Make be. feel like yours.</p>
- <div class="card"><h2>Appearance</h2><p class="muted">Sage Calm · Default theme</p><div>
- <span class="theme-dot" style="background:#dfeadd"></span>
- <span class="theme-dot" style="background:#f3e2e7"></span>
- <span class="theme-dot" style="background:#e9e1f4"></span>
- </div><p class="small">More themes will be available in Premium.</p></div>
- <div class="card"><h2>Daily reminder</h2><p class="muted">Allow notifications for gentle reminders.</p>
- <button class="primary" onclick="enableReminder()">Enable notifications</button></div>
- <div class="card"><h2>About be.</h2><p class="muted">A little peace, every day.</p></div>
- </section>`;
- }
-}
-let mood='🌿';
-function pickMood(m){mood=m;document.querySelectorAll('#moods button').forEach(b=>b.style.background=b.textContent===m?'var(--soft)':'transparent')}
-function saveJournal(){
- const text=$('journalText').value.trim();
- if(!text){alert('Write a little note first.');return}
- journal.unshift({text,mood,date:new Date().toLocaleDateString()});
- localStorage.setItem('beJournal',JSON.stringify(journal));
- showPage('journal');
-}
-function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function enableReminder(){
- if(!('Notification'in window)){alert('Notifications are not supported in this browser.');return}
- const result=await Notification.requestPermission();
- alert(result==='granted'?'Notifications enabled where supported.':'Notification permission was not granted.');
-}
-$('nav').addEventListener('click',e=>{
- const btn=e.target.closest('button[data-page]');
- if(btn)showPage(btn.dataset.page);
-});
-if(localStorage.getItem('beStarted')==='yes')showHome();
-else showOnboarding();
-</script>
-</body>
-</html>
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+
+      - name: Prepare web app
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+
+      - name: Configure Capacitor
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.be.app",
+            "appName": "be.",
+            "webDir": "www"
+          }
+          EOF
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: be-android-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
